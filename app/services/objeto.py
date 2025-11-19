@@ -12,9 +12,18 @@ class ObjetoService:
     def __init__(self, session: Session):
         self.session = session
 
-    def fetch_objetos(self, tipo: Optional[str] = None, status: Optional[str] = None, categoria: Optional[str] = None, local_ocorrencia: Optional[str] = None, search: Optional[str] = None) -> List[Objeto]:
+    def fetch_objetos(
+        self, 
+        tipo: Optional[str] = None, 
+        status: Optional[str] = None, 
+        categoria: Optional[List[str]] = None,
+        local_ocorrencia: Optional[List[str]] = None,
+        search: Optional[str] = None,
+        user_id: Optional[uuid.UUID] = None
+    ) -> List[Objeto]:
         query = select(Objeto).order_by(desc(Objeto.data_registro))
-
+        if user_id:
+            query = query.where(Objeto.user_id == user_id)
         if tipo:
             query = query.where(Objeto.tipo == tipo)
         if status:
@@ -23,9 +32,9 @@ class ObjetoService:
             else:
                 query = query.where(Objeto.status == status)
         if categoria:
-            query = query.where(Objeto.categoria == categoria)
+            query = query.where(Objeto.categoria.in_(categoria))
         if local_ocorrencia:
-            query = query.where(Objeto.local_ocorrencia == local_ocorrencia)
+            query = query.where(Objeto.local_ocorrencia.in_(local_ocorrencia))
         if search:
             search_term = f"%{search.lower()}%"
             query = query.where(
